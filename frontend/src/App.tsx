@@ -54,9 +54,9 @@ function Layout({ children }: { children: JSX.Element }) {
     { path: '/tasks', label: 'Tasks', icon: Target },
     { path: '/mentor', label: 'AI Mentor', icon: MessageCircle },
     { path: '/chat', label: 'AI Chat', icon: MessageSquare },
-    { path: '/resources', label: 'Resources', icon: BookOpen },
+    // { path: '/resources', label: 'Resources', icon: BookOpen },
     { path: '/analytics', label: 'Analytics', icon: TrendingUp },
-    { path: '/rooms', label: 'Study Rooms', icon: Users },
+    // { path: '/rooms', label: 'Study Rooms', icon: Users },
     { path: '/profile', label: 'Profile', icon: User },
   ]
 
@@ -66,7 +66,16 @@ function Layout({ children }: { children: JSX.Element }) {
         {/* Fixed Sidebar */}
         <aside className="w-64 border-r bg-card flex flex-col fixed left-0 top-0 h-full z-50">
           <div className="p-6 border-b">
-            <h1 className="text-2xl font-bold text-primary">StudyBuddy</h1>
+<h1
+  className="text-2xl font-bold bg-gradient-to-r from-indigo-600 via-purple-700 to-pink-600 bg-clip-text text-transparent animate-gradient-x"
+  style={{
+    backgroundSize: '200% auto',
+  }}
+>
+  StudyBuddy
+</h1>
+
+
             <p className="text-sm text-muted-foreground">AI-Powered Learning</p>
           </div>
           

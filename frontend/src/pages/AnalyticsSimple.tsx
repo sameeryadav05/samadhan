@@ -4,7 +4,14 @@ import { useAuth } from '../contexts/AuthContext'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
 import { Progress } from '../components/ui/progress'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts'
+import { Button } from '../components/ui/button'
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  LineChart, Line, PieChart, Pie, Cell,
+  AreaChart,
+  Area,
+  Label
+} from 'recharts'
 import { TrendingUp, Target, Clock, Award, Users } from 'lucide-react'
 
 type Stats = {
@@ -16,41 +23,100 @@ type Stats = {
   completionRate: number
 }
 
+type Task = {
+  _id: string
+  title: string
+  subject: string
+  date: string
+  durationMinutes: number
+  completed: boolean
+}
+
+type Plan = {
+  _id: string
+  goal: string
+  tasks: Task[]
+}
+
 export default function AnalyticsSimple() {
   const { token } = useAuth()
   const [stats, setStats] = useState<Stats | null>(null)
-  const [plans, setPlans] = useState<any[]>([])
+  const [plans, setPlans] = useState<Plan[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  console.log('AnalyticsSimple component rendering...')
+const chartData = [
+  { day: "Sun", completed: 2, total: 10 },
+  { day: "Mon", completed: 7, total: 7 },
+  { day: "Tue", completed: 1, total: 3 },
+  { day: "Wed", completed: 4, total: 5 },
+  { day: "Thu", completed: 8, total: 11 },
+  { day: "Fri", completed: 2, total: 4 },
+  { day: "Sat", completed: 3, total: 5 },
+];
 
   useEffect(() => {
-    if (token) {
-      fetchAnalytics()
+    if (!token) {
+      setLoading(false)
+      return
     }
+    async function fetchAnalytics() {
+      try {
+        const client = api(token)
+        const [statsRes, plansRes] = await Promise.all([
+          client.get('/gamification/stats'),
+          client.get('/plans')
+        ])
+
+        setStats(statsRes.data)
+        setPlans(plansRes.data)
+        setError(null)
+      } catch (err: any) {
+        setError(err.message || 'Failed to load analytics')
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchAnalytics()
   }, [token])
 
-  async function fetchAnalytics() {
-    try {
-      console.log('Fetching analytics...')
-      const client = api(token || undefined)
-      const [statsRes, plansRes] = await Promise.all([
-        client.get('/gamification/stats'),
-        client.get('/plans')
-      ])
-      
-      console.log('Analytics data fetched:', { stats: statsRes.data, plans: plansRes.data })
-      setStats(statsRes.data)
-      setPlans(plansRes.data)
-      setError(null)
-    } catch (e) {
-      console.error('Failed to fetch analytics:', e)
-      setError('Failed to load analytics')
-    } finally {
-      setLoading(false)
+
+  // Flatten tasks for data calculations, guard in case tasks missing
+  const allTasks = plans.flatMap(plan => (Array.isArray(plan.tasks) ? plan.tasks : []))
+
+  // Aggregate subject data
+  const subjectData = allTasks.reduce<Record<string, { completed: number; total: number }>>((acc, task) => {
+    const subject = task.subject || 'Unknown'
+    if (!acc[subject]) acc[subject] = { completed: 0, total: 0 }
+    acc[subject].total++
+    if (task.completed) acc[subject].completed++
+    return acc
+  }, {})
+
+  const subjectChartData = Object.entries(subjectData).map(([subject, values]) => ({
+    subject,
+    completed: values.completed,
+    pending: values.total - values.completed,
+    completionRate: Math.round((values.completed / values.total) * 100)
+  }))
+
+  // Weekly progress for last 7 days
+  const weeklyData = Array.from({ length: 7 }).map((_, i) => {
+    const date = new Date()
+    date.setDate(date.getDate() - (6 - i))
+    const dayTasks = allTasks.filter(task => new Date(task.date).toDateString() === date.toDateString())
+    return {
+      day: date.toLocaleDateString('en', { weekday: 'short' }),
+      completed: dayTasks.filter(task => task.completed).length,
+      total: dayTasks.length
     }
-  }
+  })
+
+  // Pie chart data for completion stats
+  const pieData = [
+    { name: 'Completed', value: stats?.completedTasks || 0, color: '#00C49F' },
+    { name: 'Pending', value: (stats?.totalTasks || 0) - (stats?.completedTasks || 0), color: '#FF8042' }
+  ]
 
   if (loading) {
     return (
@@ -74,46 +140,6 @@ export default function AnalyticsSimple() {
     )
   }
 
-  // Process data for charts
-  const allTasks = plans.flatMap(plan => plan.tasks || [])
-  const subjectData = allTasks.reduce((acc, task) => {
-    const subject = task.subject || 'Unknown'
-    if (!acc[subject]) {
-      acc[subject] = { completed: 0, total: 0 }
-    }
-    acc[subject].total++
-    if (task.completed) acc[subject].completed++
-    return acc
-  }, {} as Record<string, { completed: number; total: number }>)
-
-  const subjectChartData = Object.entries(subjectData).map(([subject, data]) => ({
-    subject,
-    completed: data.completed,
-    pending: data.total - data.completed,
-    completionRate: Math.round((data.completed / data.total) * 100)
-  }))
-
-  // Weekly data for line chart
-  const weeklyData = Array.from({ length: 7 }, (_, i) => {
-    const date = new Date()
-    date.setDate(date.getDate() - (6 - i))
-    const dayTasks = allTasks.filter(task => {
-      const taskDate = new Date(task.date)
-      return taskDate.toDateString() === date.toDateString()
-    })
-    
-    return {
-      day: date.toLocaleDateString('en', { weekday: 'short' }),
-      completed: dayTasks.filter(task => task.completed).length,
-      total: dayTasks.length
-    }
-  })
-
-  const pieData = [
-    { name: 'Completed', value: stats?.completedTasks || 0, color: '#00C49F' },
-    { name: 'Pending', value: (stats?.totalTasks || 0) - (stats?.completedTasks || 0), color: '#FF8042' }
-  ]
-
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
@@ -121,7 +147,7 @@ export default function AnalyticsSimple() {
         <h2 className="text-2xl font-semibold">Analytics & Insights</h2>
       </div>
 
-      {/* Stats Overview */}
+      {/* Stats overview cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="pb-2">
@@ -131,10 +157,8 @@ export default function AnalyticsSimple() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.level || 1}</div>
-            <p className="text-xs text-muted-foreground">
-              {stats?.xp || 0} XP
-            </p>
+            <div className="text-2xl font-bold">{stats?.level ?? 1}</div>
+            <p className="text-xs text-muted-foreground">{stats?.xp ?? 0} XP</p>
           </CardContent>
         </Card>
 
@@ -146,7 +170,7 @@ export default function AnalyticsSimple() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.streak || 0}</div>
+            <div className="text-2xl font-bold">{stats?.streak ?? 0}</div>
             <p className="text-xs text-muted-foreground">days in a row</p>
           </CardContent>
         </Card>
@@ -159,8 +183,8 @@ export default function AnalyticsSimple() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.completionRate || 0}%</div>
-            <Progress value={stats?.completionRate || 0} className="mt-2" />
+            <div className="text-2xl font-bold">{stats?.completionRate ?? 0}%</div>
+            <Progress value={stats?.completionRate ?? 0} className="mt-2" />
           </CardContent>
         </Card>
 
@@ -172,13 +196,13 @@ export default function AnalyticsSimple() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.totalTasks || 0}</div>
+            <div className="text-2xl font-bold">{stats?.totalTasks ?? 0}</div>
             <p className="text-xs text-muted-foreground">total tasks</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Simple Progress Section */}
+      {/* Pie & Line charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
@@ -195,8 +219,8 @@ export default function AnalyticsSimple() {
                   dataKey="value"
                   label={({ name, value }) => `${name}: ${value}`}
                 >
-                  {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  {pieData.map((entry, idx) => (
+                    <Cell key={`cell-${idx}`} fill={entry.color} />
                   ))}
                 </Pie>
                 <Tooltip />
@@ -210,30 +234,47 @@ export default function AnalyticsSimple() {
             <CardTitle>Weekly Progress</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={weeklyData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="day" />
-                <YAxis />
-                <Tooltip />
-                <Line type="monotone" dataKey="completed" stroke="#00C49F" strokeWidth={2} />
-                <Line type="monotone" dataKey="total" stroke="#8884D8" strokeWidth={2} />
-              </LineChart>
-            </ResponsiveContainer>
+<ResponsiveContainer width="100%" height={200}>
+  <BarChart data={chartData}>
+    <CartesianGrid strokeDasharray="3 3" />
+    <XAxis dataKey="day" />
+    <YAxis />
+    <Tooltip />
+    <Bar
+      type="bump"
+      dataKey="completed"
+      fill="#00C49F"
+      stroke="#00C49F"
+      strokeWidth={2}
+      animationBegin={1000}      // Delay animation start 1 second
+      animationDuration={1500}   // Animation lasts 1.5 seconds
+    />
+    <Bar
+      type="bump"
+      dataKey="total"
+      fill="#8884D8"
+      stroke="#8884D8"
+      strokeWidth={2}
+      animationBegin={1000}      // Slightly offset delay for the second area
+      animationDuration={1500}
+    />
+  </BarChart>
+</ResponsiveContainer>
+
           </CardContent>
         </Card>
       </div>
 
-      {/* Subject Performance */}
+      {/* Subject performance */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
             <CardTitle>Subject Performance</CardTitle>
           </CardHeader>
           <CardContent>
-            {subjectChartData.length > 0 ? (
+            {subjectChartData.length ? (
               <div className="space-y-4">
-                {subjectChartData.map((data) => (
+                {subjectChartData.map(data => (
                   <div key={data.subject} className="space-y-2">
                     <div className="flex justify-between items-center">
                       <span className="font-medium">{data.subject}</span>
@@ -250,7 +291,9 @@ export default function AnalyticsSimple() {
             ) : (
               <div className="text-center py-8 text-muted-foreground">
                 <p className="text-lg font-semibold mb-2">No subject data yet</p>
-                <p className="text-sm">Complete some tasks to see your subject performance</p>
+                <p className="text-sm">
+                  Complete some tasks to see your subject performance
+                </p>
               </div>
             )}
           </CardContent>
@@ -276,19 +319,6 @@ export default function AnalyticsSimple() {
           </Card>
         )}
       </div>
-
-      {/* Leaderboard */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Leaderboard</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8 text-muted-foreground">
-            <p className="text-lg font-semibold mb-2">No leaderboard data yet</p>
-            <p className="text-sm">Complete more tasks to see your ranking</p>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   )
 }

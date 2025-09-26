@@ -56,17 +56,19 @@ export default function LoginPage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="flex items-start gap-3 p-4 bg-white/50 rounded-lg backdrop-blur-sm">
+
+            <div className="flex items-start gap-3 p-4 bg-white/50 rounded-lg backdrop-blur-sm hover:scale-105">
               <div className="p-2 bg-green-100 rounded-lg">
                 <Target className="h-5 w-5 text-green-600" />
               </div>
+              
               <div>
                 <h3 className="font-semibold">Smart Scheduling</h3>
                 <p className="text-sm text-muted-foreground">AI creates personalized study plans</p>
               </div>
             </div>
 
-            <div className="flex items-start gap-3 p-4 bg-white/50 rounded-lg backdrop-blur-sm">
+            <div className="flex items-start gap-3 p-4 bg-white/50 rounded-lg backdrop-blur-sm hover:scale-105">
               <div className="p-2 bg-blue-100 rounded-lg">
                 <Brain className="h-5 w-5 text-blue-600" />
               </div>
@@ -76,7 +78,7 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div className="flex items-start gap-3 p-4 bg-white/50 rounded-lg backdrop-blur-sm">
+            <div className="flex items-start gap-3 p-4 bg-white/50 rounded-lg backdrop-blur-sm hover:scale-105">
               <div className="p-2 bg-purple-100 rounded-lg">
                 <BookOpen className="h-5 w-5 text-purple-600" />
               </div>
@@ -86,7 +88,7 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div className="flex items-start gap-3 p-4 bg-white/50 rounded-lg backdrop-blur-sm">
+            <div className="flex items-start gap-3 p-4 bg-white/50 rounded-lg backdrop-blur-sm hover:scale-105">
               <div className="p-2 bg-orange-100 rounded-lg">
                 <Users className="h-5 w-5 text-orange-600" />
               </div>
