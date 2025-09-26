@@ -185,17 +185,24 @@ export default function TasksTest() {
   const completedTasks = allTasks.filter(task => task.completed)
   const completionRate = allTasks.length ? Math.round((completedTasks.length / allTasks.length) * 100) : 0
 
-  // Filter tasks based on search and filters
-  const filteredTasks = allTasks.filter(task => {
-    const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         task.subject.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesPriority = filterPriority === 'all' || task.priority === filterPriority
-    const matchesStatus = filterStatus === 'all' || 
-                         (filterStatus === 'completed' && task.completed) ||
-                         (filterStatus === 'pending' && !task.completed)
-    
-    return matchesSearch && matchesPriority && matchesStatus
-  })
+// Filter tasks based on search and filters
+const filteredTasks = allTasks.filter(task => {
+  const matchesSearch =
+    task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    task.subject.toLowerCase().includes(searchTerm.toLowerCase())
+
+  const matchesPriority =
+    filterPriority === 'all' || task.priority === filterPriority
+
+  const matchesStatus =
+    filterStatus === 'all' ||
+    ((filterStatus === 'completed' && task.completed) ||
+     (filterStatus === 'pending' && !task.completed)) // added parentheses
+
+  return matchesSearch && matchesPriority && matchesStatus
+})
+
+
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -304,19 +311,9 @@ export default function TasksTest() {
             </div>
             <div className="flex gap-2">
               <select
-                value={filterPriority}
-                onChange={(e) => setFilterPriority(e.target.value)}
-                className="px-3 py-2 border rounded-md text-sm"
-              >
-                <option value="all">All Priorities</option>
-                <option value="high">High Priority</option>
-                <option value="medium">Medium Priority</option>
-                <option value="low">Low Priority</option>
-              </select>
-              <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-3 py-2 border rounded-md text-sm"
+                className="px-3 py-2 mx-1 border rounded-md text-sm text-white bg-[#2563EB]"
               >
                 <option value="all">All Tasks</option>
                 <option value="pending">Pending</option>
