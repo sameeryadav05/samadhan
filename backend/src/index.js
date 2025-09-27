@@ -4,6 +4,7 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 
+// Import routes
 import authRoutes from './routes/auth.routes.js';
 import planRoutes from './routes/plan.routes.js';
 import taskRoutes from './routes/task.routes.js';
@@ -17,46 +18,46 @@ import resourceRoutes from './routes/resource.routes.js';
 import gamificationRoutes from './routes/gamification.routes.js';
 import roomRoutes from './routes/room.routes.js';
 
-dotenv.config({ path: '../.env' });
+// Load environment variables
+dotenv.config(); // backend/.env
 
-// Set environment variables directly if not loaded
-if (!process.env.JWT_SECRET) {
-  process.env.JWT_SECRET = 'your-super-secret-jwt-key-here';
-}
-if (!process.env.HF_TOKEN) {
-  process.env.HF_TOKEN = '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';
-}
-if (!process.env.MONGO_URI) {
-  process.env.MONGO_URI = 'mongodb://localhost:27017/studybuddy';
+// Verify environment variables
+if (!process.env.JWT_SECRET || !process.env.HF_TOKEN || !process.env.MONGO_URI) {
+  console.error('Missing required environment variables in .env');
+  process.exit(1);
 }
 
 console.log('Environment variables loaded:');
-console.log('JWT_SECRET:', process.env.JWT_SECRET ? 'set' : 'not set');
-console.log('HF_TOKEN:', process.env.HF_TOKEN ? 'set' : 'not set');
-console.log('MONGO_URI:', process.env.MONGO_URI ? 'set' : 'not set');
+console.log('JWT_SECRET:', 'set');
+console.log('HF_TOKEN:', 'set');
+console.log('MONGO_URI:', 'set');
 
 const app = express();
+const PORT = process.env.PORT || 4000;
+
+// Middlewares
 app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'));
 
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/studybuddy';
-const PORT = process.env.PORT || 4000;
-
+// MongoDB connection
 mongoose
-  .connect(MONGO_URI)
-  .then(() => {
-    console.log('MongoDB connected');
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
   })
+  .then(() => console.log('MongoDB connected successfully'))
   .catch((err) => {
-    console.error('MongoDB connection error', err);
+    console.error('MongoDB connection error:', err);
     process.exit(1);
   });
 
+// Test route
 app.get('/', (req, res) => {
   res.json({ status: 'ok', service: 'studybuddy-backend' });
 });
 
+// API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/plans', planRoutes);
 app.use('/api/tasks', taskRoutes);
@@ -70,124 +71,13 @@ app.use('/api/resources', resourceRoutes);
 app.use('/api/gamification', gamificationRoutes);
 app.use('/api/rooms', roomRoutes);
 
-// Additional endpoints for Tasks page
-app.get('/api/plans', (req, res) => {
-  // Return empty array for now - this would normally fetch from database
-  res.json([]);
-});
-
-app.patch('/api/tasks/:planId/:taskId/toggle', (req, res) => {
-  const { planId, taskId } = req.params;
-  console.log(`Toggling task ${taskId} in plan ${planId}`);
-  res.json({ success: true, message: 'Task toggled successfully' });
-});
-
-app.post('/api/gamification/complete-task', (req, res) => {
-  const { xpGained } = req.body;
-  console.log(`Task completed, XP gained: ${xpGained}`);
-  res.json({ success: true, message: 'XP updated successfully' });
-});
-
-// Reminders endpoint for Dashboard
-app.get('/api/reminders', (req, res) => {
-  // Return empty array for now - this would normally fetch from database
-  res.json([]);
-});
-
-// Gamification stats endpoint for Dashboard
-app.get('/api/gamification/stats', (req, res) => {
-  // Return default stats - this would normally fetch from database
-  res.json({
-    streak: 0,
-    xp: 0,
-    level: 1,
-    totalTasks: 0,
-    completedTasks: 0,
-    completionRate: 0
-  });
-});
-
-// Leaderboard endpoint for Analytics
-app.get('/api/gamification/leaderboard', (req, res) => {
-  // Return empty leaderboard for now
-  res.json([]);
-});
-
-// Resources endpoints
-app.get('/api/resources', (req, res) => {
-  // Return empty resources array for now
-  res.json([]);
-});
-
-app.post('/api/resources', (req, res) => {
-  // Mock resource creation
-  res.json({ success: true, message: 'Resource saved successfully' });
-});
-
-app.post('/api/resources/recommend', (req, res) => {
-  // Mock AI recommendations
-  const { subject } = req.body;
-  const mockRecommendations = [
-    {
-      title: `Best ${subject} Tutorial`,
-      type: 'video',
-      url: 'https://example.com/tutorial',
-      description: `Comprehensive ${subject} tutorial for beginners`
-    },
-    {
-      title: `${subject} Documentation`,
-      type: 'article',
-      url: 'https://example.com/docs',
-      description: `Official ${subject} documentation and guides`
-    }
-  ];
-  res.json({ recommendations: mockRecommendations });
-});
-
-app.put('/api/resources/:id', (req, res) => {
-  // Mock resource update
-  res.json({ success: true, message: 'Resource updated successfully' });
-});
-
-// Rooms endpoints
-app.get('/api/rooms', (req, res) => {
-  // Return empty rooms array for now
-  res.json([]);
-});
-
-app.post('/api/rooms', (req, res) => {
-  // Mock room creation
-  const { name, description } = req.body;
-  res.json({
-    _id: 'mock-room-id',
-    name,
-    description,
-    owner: { _id: 'mock-owner', name: 'Mock Owner', email: 'owner@example.com' },
-    members: [],
-    inviteCode: 'ABC123',
-    isPublic: false
-  });
-});
-
-app.post('/api/rooms/join', (req, res) => {
-  // Mock room joining
-  const { inviteCode } = req.body;
-  res.json({
-    _id: 'mock-joined-room-id',
-    name: 'Joined Room',
-    description: 'A room you joined',
-    owner: { _id: 'mock-owner', name: 'Room Owner', email: 'owner@example.com' },
-    members: [],
-    inviteCode,
-    isPublic: false
-  });
-});
-
+// Global error handler
 app.use((err, req, res, next) => {
   console.error(err);
   res.status(err.status || 500).json({ message: err.message || 'Server error' });
 });
 
+// Start server
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
