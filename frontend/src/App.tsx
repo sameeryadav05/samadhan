@@ -52,7 +52,7 @@ function Layout({ children }: { children: JSX.Element }) {
     { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/scheduler', label: 'Scheduler', icon: Calendar },
     { path: '/tasks', label: 'Tasks', icon: Target },
-    { path: '/mentor', label: 'AI Mentor', icon: MessageCircle },
+    // { path: '/mentor', label: 'AI Mentor', icon: MessageCircle },
     { path: '/chat', label: 'AI Chat', icon: MessageSquare },
     // { path: '/resources', label: 'Resources', icon: BookOpen },
     { path: '/analytics', label: 'Analytics', icon: TrendingUp },

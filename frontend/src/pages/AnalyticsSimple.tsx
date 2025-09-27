@@ -46,14 +46,15 @@ export default function AnalyticsSimple() {
   const [error, setError] = useState<string | null>(null)
 
 const chartData = [
-  { day: "Sun", completed: 2, total: 10 },
-  { day: "Mon", completed: 7, total: 7 },
-  { day: "Tue", completed: 1, total: 3 },
-  { day: "Wed", completed: 4, total: 5 },
-  { day: "Thu", completed: 8, total: 11 },
-  { day: "Fri", completed: 2, total: 4 },
-  { day: "Sat", completed: 3, total: 5 },
+  { day: "Sun", completed: 3, total: 8 },
+  { day: "Mon", completed: 6, total: 10 },
+  { day: "Tue", completed: 4, total: 7 },
+  { day: "Wed", completed: 2, total: 9 },
+  { day: "Thu", completed: 5, total: 12 },
+  { day: "Fri", completed: 5, total: 8 },
+  { day: "Sat", completed: 8, total: 10 },
 ];
+
 
   useEffect(() => {
     if (!token) {
@@ -241,7 +242,7 @@ const chartData = [
     <YAxis />
     <Tooltip />
     <Bar
-      type="bump"
+      type="linear"
       dataKey="completed"
       fill="#00C49F"
       stroke="#00C49F"
@@ -250,7 +251,7 @@ const chartData = [
       animationDuration={1500}   // Animation lasts 1.5 seconds
     />
     <Bar
-      type="bump"
+      type="linear"
       dataKey="total"
       fill="#8884D8"
       stroke="#8884D8"
@@ -258,7 +259,9 @@ const chartData = [
       animationBegin={1000}      // Slightly offset delay for the second area
       animationDuration={1500}
     />
+
   </BarChart>
+  
 </ResponsiveContainer>
 
           </CardContent>
