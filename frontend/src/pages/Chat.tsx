@@ -31,12 +31,12 @@ export default function Chat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   };
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, isLoading]);
 
   const sendMessage = async (message: string) => {
     if (!message.trim() || isLoading) return;
@@ -74,7 +74,7 @@ export default function Chat() {
       console.error('Chat error:', err);
       const errorMessage = err?.response?.data?.error || err?.message || 'Failed to send message';
       setError(errorMessage);
-      
+
       // Add error message to chat
       const errorChatMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
@@ -133,7 +133,7 @@ export default function Chat() {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Chat Interface */}
         <div className="lg:col-span-3">
-          <Card className="h-[600px] flex flex-col">
+          <Card className="h-[600px] flex flex-col overflow-hidden">
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center gap-2">
                 <Bot className="h-5 w-5 text-primary" />
@@ -149,7 +149,14 @@ export default function Chat() {
             
             <CardContent className="flex-1 flex flex-col p-0">
               {/* Messages Area */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              <div
+                className="flex-1 overflow-y-auto p-6 space-y-4 break-words"
+                style={{
+                  maxHeight: '440px',
+                  wordBreak: 'break-word',
+                  overflowWrap: 'anywhere'
+                }}
+              >
                 {messages.length === 0 ? (
                   <div className="text-center py-12">
                     <div className="p-4 bg-muted rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
@@ -180,8 +187,12 @@ export default function Chat() {
                             ? 'bg-primary text-primary-foreground'
                             : 'bg-muted'
                         }`}
+                        style={{
+                          wordBreak: 'break-word',
+                          overflowWrap: 'anywhere'
+                        }}
                       >
-                        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                        <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
                         <p className="text-xs opacity-70 mt-1">
                           {new Date(message.timestamp).toLocaleTimeString()}
                         </p>
@@ -209,7 +220,6 @@ export default function Chat() {
                     </div>
                   </div>
                 )}
-                
                 <div ref={messagesEndRef} />
               </div>
 
