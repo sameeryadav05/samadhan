@@ -1,6 +1,13 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react'
 
-type User = { id: string; name: string; email: string; role: 'user' | 'admin' }
+type User = {
+  id: string
+  name: string
+  email: string
+  role: 'user' | 'admin'
+  level?: number // ✅ added to fix TS2339 in App.tsx
+  xp?: number    // ✅ added to fix TS2339 in App.tsx
+}
 
 type AuthContextType = {
   token: string | null
@@ -25,11 +32,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         if (storedToken && storedUser) {
           setToken(storedToken)
-          setUser(JSON.parse(storedUser))
+          setUser(JSON.parse(storedUser) as User) // ✅ cast to User
         }
       } catch (error) {
         console.error('Error loading auth state:', error)
-        // Clear corrupted data
         localStorage.removeItem('sb_token')
         localStorage.removeItem('sb_user')
       } finally {
@@ -40,7 +46,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initializeAuth()
   }, [])
 
-  const value = useMemo(() => ({
+  const value: AuthContextType = useMemo(() => ({
     token,
     user,
     isLoading,
@@ -66,5 +72,3 @@ export function useAuth() {
   if (!ctx) throw new Error('useAuth must be used within AuthProvider')
   return ctx
 }
-
-
