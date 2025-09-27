@@ -56,30 +56,33 @@ const chartData = [
 ];
 
 
-  useEffect(() => {
-    if (!token) {
-      setLoading(false)
-      return
-    }
-    async function fetchAnalytics() {
-      try {
-        const client = api(token)
-        const [statsRes, plansRes] = await Promise.all([
-          client.get('/gamification/stats'),
-          client.get('/plans')
-        ])
+useEffect(() => {
+  if (!token) {
+    setLoading(false)
+    return
+  }
 
-        setStats(statsRes.data)
-        setPlans(plansRes.data)
-        setError(null)
-      } catch (err: any) {
-        setError(err.message || 'Failed to load analytics')
-      } finally {
-        setLoading(false)
-      }
+  async function fetchAnalytics() {
+    try {
+      const client = api(token ?? undefined)
+      const [statsRes, plansRes] = await Promise.all([
+        client.get('/gamification/stats'),
+        client.get('/plans')
+      ])
+
+      setStats(statsRes.data)
+      setPlans(plansRes.data)
+      setError(null)
+    } catch (err: any) {
+      setError(err.message || 'Failed to load analytics')
+    } finally {
+      setLoading(false)
     }
-    fetchAnalytics()
-  }, [token])
+  }
+
+  fetchAnalytics()
+}, [token])
+
 
 
   // Flatten tasks for data calculations, guard in case tasks missing
