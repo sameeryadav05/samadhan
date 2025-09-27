@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosHeaders } from 'axios';
+import axios, { AxiosInstance, AxiosRequestHeaders } from 'axios';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'https://studybuddy-server-b74e.onrender.com/api';
 
@@ -8,10 +8,11 @@ export function api(token?: string): AxiosInstance {
   });
 
   if (token) {
-    // Use AxiosHeaders to ensure TS compatibility
-    const headers = new AxiosHeaders();
-    headers.set('Authorization', `Bearer ${token}`);
-    instance.defaults.headers = headers;
+    // Type-safe way to set headers
+    instance.defaults.headers = {
+      ...instance.defaults.headers,
+      Authorization: `Bearer ${token}`,
+    } as AxiosRequestHeaders;
   }
 
   return instance;
